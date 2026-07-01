@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import {sampleBooks} from "@/lib/constants";
 import BookCard from "@/components/ui/BookCard";
+import Link from "next/link";
 
 const Page = () => {
     return (
@@ -17,9 +18,11 @@ const Page = () => {
                             <p className="library-hero-description">
                                 Convert your books into interactive AI conversations. Listen, learn, and discuss your favorite reads.
                             </p>
-                            <Button className="bg-[#e4e8ed] text-black hover:bg-[#d4d8dd] rounded-lg h-12 px-6 flex items-center gap-2 border-none shadow-none cursor-pointer">
+                            <Button asChild className="bg-[`#e4e8ed`] text-black hover:bg-[`#d4d8dd`] rounded-lg h-12 px-6 flex items-center gap-2 border-none shadow-none cursor-pointer">
+                                <Link href="/books/new">
                                 <Plus className="size-5" />
                                 <span className="font-semibold text-base">Add new book</span>
+                                </Link>
                             </Button>
                         </div>
 
