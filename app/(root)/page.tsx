@@ -2,13 +2,17 @@ import React from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
-import {sampleBooks} from "@/lib/constants";
 import BookCard from "@/components/ui/BookCard";
+import {getAllBooks} from "@/lib/Actions/book.actions";
 
-const Page = () => {
+const Page = async () => {
+    const bookResults = await getAllBooks();
+    const books = bookResults.success ? bookResults.data ?? [] : [];
+
+
     return (
         <main className="min-h-screen bg-background pt-(--navbar-height)">
-            <section className="wrapper pt-28 mb-10 md:mb-16">
+            <section className="wrapper mb-10 md:mb-16">
                 <div className="library-hero-card">
                     <div className="library-hero-content">
                         {/* Left Section */}
@@ -75,7 +79,7 @@ const Page = () => {
                     </div>
                 </div>
                 <div className="library-books-grid">
-                    {sampleBooks.map((book) => (
+                    {books.map((book) => (
                         <BookCard key={book._id} title={book.title} author={book.author} coverURL={book.coverURL} slug={book.slug} />
                     ))}
                 </div>
