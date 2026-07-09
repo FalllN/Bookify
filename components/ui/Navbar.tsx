@@ -9,7 +9,7 @@ import { SignInButton, SignUpButton, Show, UserButton, useClerk, useUser } from 
 const navItems = [
     {label: "Library", href: "/"},
     {label: "Add New", href: "/books/new"},
-    {Label: "Pricing", href: "/pricing"}
+    {label: "Pricing", href: "/pricing"}
 ]
 
 const Navbar = () => {

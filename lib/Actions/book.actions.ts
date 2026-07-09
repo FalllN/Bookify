@@ -80,6 +80,32 @@ export const createBook = async (data: CreateBook) => {
 
 }
 
+export const getBookBySlug = async (slug: string) => {
+    try {
+        await connectToDatabase();
+
+        const book = await Book.findOne({ slug }).lean();
+
+        if (!book) {
+            return {
+                success: false,
+                error: 'Book not found',
+            }
+        }
+
+        return {
+            success: true,
+            data: serializeData(book),
+        }
+    } catch (e) {
+        console.error('Error fetching book by slug ', e);
+        return {
+            success: false,
+            error: e,
+        }
+    }
+}
+
 export const saveBookSegments = async (bookId: string, clerkId: string, segments: TextSegment[]) => {
     try{
         await connectToDatabase();
@@ -106,6 +132,31 @@ export const saveBookSegments = async (bookId: string, clerkId: string, segments
         await BookSegment.deleteMany({ bookId });
         await Book.findByIdAndDelete(bookId);
         console.log('Book and segments deleted due to failure to save segments.');
+        return {
+            success: false,
+            error: e,
+        }
+    }
+}
+
+export const searchBookSegments = async (bookId: string, query: string, limit: number = 3) => {
+    try {
+        await connectToDatabase();
+
+        const segments = await BookSegment.find(
+            { bookId, $text: { $search: query } },
+            { score: { $meta: "textScore" } }
+        )
+            .sort({ score: { $meta: "textScore" } })
+            .limit(limit)
+            .lean();
+
+        return {
+            success: true,
+            data: serializeData(segments),
+        }
+    } catch (e) {
+        console.error('Error searching book segments ', e);
         return {
             success: false,
             error: e,
