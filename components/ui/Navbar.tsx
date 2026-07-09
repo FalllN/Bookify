@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {usePathname} from "next/navigation";
 import {cn} from "@/lib/utils";
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useClerk, useUser } from '@clerk/nextjs'
+import { SignInButton, SignUpButton, Show, UserButton, useUser } from '@clerk/nextjs'
 
 const navItems = [
     {label: "Library", href: "/"},
@@ -39,15 +39,15 @@ const Navbar = () => {
                 })}
 
                 <div className="flex gap-7.5 items-center ml-4">
-                    <SignedOut>
+                    <Show when="signed-out">
                         <SignInButton mode="modal">
                             <button className="nav-link-base text-black hover:opacity-70">Sign In</button>
                         </SignInButton>
                         <SignUpButton mode="modal">
                             <button className="bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 transition-opacity">Sign Up</button>
                         </SignUpButton>
-                    </SignedOut>
-                    <SignedIn>
+                    </Show>
+                    <Show when="signed-in">
                         <div className="nav-user-link">
                         <UserButton />
                             {user?.firstName && (
@@ -55,7 +55,7 @@ const Navbar = () => {
                             )}
 
                     </div>
-                    </SignedIn>
+                    </Show>
                 </div>
             </nav>
         </div>
