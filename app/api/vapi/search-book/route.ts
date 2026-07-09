@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 import { searchBookSegments } from '@/lib/Actions/book.actions';
 
 // Helper function to process book search logic
