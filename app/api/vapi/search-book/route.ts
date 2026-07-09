@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+export const revalidate = 0;
 
 import { searchBookSegmentsInternal } from '@/lib/Actions/search';
 
@@ -66,14 +67,16 @@ function parseArgs(args: unknown): Record<string, unknown> {
 }
 
 export async function POST(request: Request) {
-    console.log('Vapi search-book POST request received');
+    console.log('--- Vapi search-book POST start ---');
     try {
-        if (!process.env.MONGODB_URI) {
-            console.error('CRITICAL: MONGODB_URI is not defined in environment variables');
+        const uri = process.env.MONGODB_URI;
+        if (!uri) {
+            console.error('ERROR: MONGODB_URI is not defined in process.env');
             return NextResponse.json({
                 results: [{ result: 'Database configuration missing on server.' }]
             }, { status: 500 });
         }
+        console.log('MONGODB_URI is present (obfuscated):', uri.substring(0, 20) + '...');
 
         let body;
         try {
