@@ -5,6 +5,8 @@ import { Plus } from 'lucide-react'
 import BookCard from "@/components/ui/BookCard";
 import {getAllBooks} from "@/lib/Actions/book.actions";
 
+export const dynamic = 'force-dynamic'
+
 const Page = async () => {
     const bookResults = await getAllBooks();
     const books = bookResults.success ? bookResults.data ?? [] : [];
