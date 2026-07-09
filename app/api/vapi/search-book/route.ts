@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-import { searchBookSegments } from '@/lib/Actions/book.actions';
+import { searchBookSegmentsInternal } from '@/lib/Actions/search';
 
 // Helper function to process book search logic
 async function processBookSearch(bookId: unknown, query: unknown) {
+    console.log(`Processing search - bookId: ${bookId}, query: ${query}`);
+    
     // Validate inputs before conversion to prevent null/undefined becoming "null"/"undefined" strings
     if (bookId == null || query == null || query === '') {
+        console.warn('Missing bookId or query in processBookSearch');
         return { result: 'Missing bookId or query' };
     }
 
@@ -17,22 +21,35 @@ async function processBookSearch(bookId: unknown, query: unknown) {
 
     // Additional validation after conversion
     if (!bookIdStr || bookIdStr === 'null' || bookIdStr === 'undefined' || !queryStr) {
+        console.warn(`Invalid bookId or query after conversion: bookIdStr="${bookIdStr}", queryStr="${queryStr}"`);
         return { result: 'Missing bookId or query' };
     }
 
     // Execute search
-    const searchResult = await searchBookSegments(bookIdStr, queryStr, 3);
+    try {
+        const searchResult = await searchBookSegmentsInternal(bookIdStr, queryStr, 3);
 
-    // Return results
-    if (!searchResult.success || !searchResult.data?.length) {
-        return { result: 'No information found about this topic in the book.' };
+        // Return results
+        if (!searchResult.success) {
+            console.error('Search failed:', searchResult.error);
+            return { result: `Error searching book: ${searchResult.error}` };
+        }
+
+        if (!searchResult.data?.length) {
+            console.info('No segments found for query');
+            return { result: 'No information found about this topic in the book.' };
+        }
+
+        const combinedText = searchResult.data
+            .map((segment) => (segment as { content: string }).content)
+            .join('\n\n');
+
+        console.log(`Combined text length: ${combinedText.length}`);
+        return { result: combinedText };
+    } catch (e) {
+        console.error('Unexpected error in processBookSearch:', e);
+        return { result: 'An unexpected error occurred during search.' };
     }
-
-    const combinedText = searchResult.data
-        .map((segment) => (segment as { content: string }).content)
-        .join('\n\n');
-
-    return { result: combinedText };
 }
 
 export async function GET() {
@@ -49,10 +66,24 @@ function parseArgs(args: unknown): Record<string, unknown> {
 }
 
 export async function POST(request: Request) {
+    console.log('Vapi search-book POST request received');
     try {
-        const body = await request.json();
+        if (!process.env.MONGODB_URI) {
+            console.error('CRITICAL: MONGODB_URI is not defined in environment variables');
+            return NextResponse.json({
+                results: [{ result: 'Database configuration missing on server.' }]
+            }, { status: 500 });
+        }
 
-        console.log('Vapi search-book request:', JSON.stringify(body, null, 2));
+        let body;
+        try {
+            body = await request.json();
+        } catch (e) {
+            console.error('Failed to parse request JSON:', e);
+            return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+        }
+
+        console.log('Vapi Request Body:', JSON.stringify(body, null, 2));
 
         // Support multiple Vapi formats
         const functionCall = body?.message?.functionCall;
@@ -62,8 +93,9 @@ export async function POST(request: Request) {
         if (functionCall) {
             const { name, parameters } = functionCall;
             const parsed = parseArgs(parameters);
+            console.log(`Handling single functionCall: ${name}`, parsed);
 
-            if (name === 'searchBook') {
+            if (name === 'searchBook' || name === 'search_book') {
                 const result = await processBookSearch(parsed.bookId, parsed.query);
                 return NextResponse.json(result);
             }
@@ -73,8 +105,9 @@ export async function POST(request: Request) {
 
         // Handle toolCallList format (array of calls)
         if (!toolCallList || toolCallList.length === 0) {
+            console.info('No tool calls or function calls found in message');
             return NextResponse.json({
-                results: [{ result: 'No tool calls found' }],
+                results: [{ result: 'No tool calls found in the request.' }],
             });
         }
 
@@ -84,20 +117,23 @@ export async function POST(request: Request) {
             const { id, function: func } = toolCall;
             const name = func?.name;
             const args = parseArgs(func?.arguments);
+            console.log(`Processing tool call: ${name} (id: ${id})`, args);
 
-            if (name === 'searchBook') {
+            if (name === 'searchBook' || name === 'search_book') {
                 const searchResult = await processBookSearch(args.bookId, args.query);
                 results.push({ toolCallId: id, ...searchResult });
             } else {
+                console.warn(`Unknown tool function: ${name}`);
                 results.push({ toolCallId: id, result: `Unknown function: ${name}` });
             }
         }
 
+        console.log('Returning results:', JSON.stringify({ results }, null, 2));
         return NextResponse.json({ results });
     } catch (error) {
-        console.error('Vapi search-book error:', error);
+        console.error('Unhandled error in Vapi search-book route:', error);
         return NextResponse.json({
-            results: [{ result: 'Error processing request' }],
-        });
+            results: [{ result: 'Internal server error occurred while processing the request.' }],
+        }, { status: 500 });
     }
 }

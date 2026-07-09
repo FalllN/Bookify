@@ -4,6 +4,7 @@ import {connectToDatabase} from "@/database/mongoose";
 import {generateSlug, serializeData} from "@/lib/utils";
 import Book from "@/database/models/book.model";
 import BookSegment from "@/database/models/book-segment.model";
+import { searchBookSegmentsInternal } from "@/lib/Actions/search";
 
 export const getAllBooks = async () => {
     try {
@@ -140,27 +141,6 @@ export const saveBookSegments = async (bookId: string, clerkId: string, segments
 }
 
 export const searchBookSegments = async (bookId: string, query: string, limit: number = 3) => {
-    try {
-        await connectToDatabase();
-
-        const segments = await BookSegment.find(
-            { bookId, $text: { $search: query } },
-            { score: { $meta: "textScore" } }
-        )
-            .sort({ score: { $meta: "textScore" } })
-            .limit(limit)
-            .lean();
-
-        return {
-            success: true,
-            data: serializeData(segments),
-        }
-    } catch (e) {
-        console.error('Error searching book segments ', e);
-        return {
-            success: false,
-            error: e,
-        }
-    }
+    return searchBookSegmentsInternal(bookId, query, limit);
 }
 
