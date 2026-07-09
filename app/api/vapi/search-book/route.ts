@@ -117,10 +117,18 @@ export async function POST(request: Request) {
         const results = [];
 
         for (const toolCall of toolCallList) {
+            if (!toolCall || typeof toolCall !== 'object') {
+                console.warn('Skipping invalid toolCall:', toolCall);
+                continue;
+            }
             const { id, function: func } = toolCall;
             const name = func?.name;
             const args = parseArgs(func?.arguments);
             console.log(`Processing tool call: ${name} (id: ${id})`, args);
+
+            if (!id) {
+                console.warn('toolCallId is missing for toolCall:', toolCall);
+            }
 
             if (name === 'searchBook' || name === 'search_book') {
                 const searchResult = await processBookSearch(args.bookId, args.query);

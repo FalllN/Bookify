@@ -22,7 +22,12 @@ export const connectToDatabase = async () => {
 
     if (!cached.promise) {
         console.log('Starting new MongoDB connection...');
-        cached.promise = mongoose.connect(MONGODB_URI, { bufferCommands: false });
+        const opts = {
+            bufferCommands: false,
+            serverSelectionTimeoutMS: 8000, // 8 seconds timeout
+            heartbeatFrequencyMS: 2000,
+        };
+        cached.promise = mongoose.connect(MONGODB_URI, opts);
     }
 
     try {
