@@ -4,6 +4,7 @@ import {connectToDatabase} from "@/database/mongoose";
 import {generateSlug, serializeData} from "@/lib/utils";
 import Book from "@/database/models/book.model";
 import BookSegment from "@/database/models/book-segment.model";
+import { searchBookSegmentsInternal } from "@/lib/Actions/search";
 
 export const getAllBooks = async () => {
     try {
@@ -80,6 +81,32 @@ export const createBook = async (data: CreateBook) => {
 
 }
 
+export const getBookBySlug = async (slug: string) => {
+    try {
+        await connectToDatabase();
+
+        const book = await Book.findOne({ slug }).lean();
+
+        if (!book) {
+            return {
+                success: false,
+                error: 'Book not found',
+            }
+        }
+
+        return {
+            success: true,
+            data: serializeData(book),
+        }
+    } catch (e) {
+        console.error('Error fetching book by slug ', e);
+        return {
+            success: false,
+            error: e,
+        }
+    }
+}
+
 export const saveBookSegments = async (bookId: string, clerkId: string, segments: TextSegment[]) => {
     try{
         await connectToDatabase();
@@ -111,5 +138,9 @@ export const saveBookSegments = async (bookId: string, clerkId: string, segments
             error: e,
         }
     }
+}
+
+export const searchBookSegments = async (bookId: string, query: string, limit: number = 3) => {
+    return searchBookSegmentsInternal(bookId, query, limit);
 }
 
