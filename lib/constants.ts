@@ -167,3 +167,39 @@ export const CLERK_AUTH_APPEARANCE_OVERRIDE = {
     footerActionLink: 'text-[#212a3b] hover:text-[#3d485e] text-base font-medium',
 };
 
+// Subscription plan limits
+export const SUBSCRIPTION_PLANS = {
+    free: {
+        slug: 'free',
+        label: 'Free',
+        limits: {
+            maxBooks: 1,
+            maxSessionsPerMonth: 5,
+            maxDurationPerSession: 5, // minutes
+            hasHistory: false,
+        },
+    },
+    standard: {
+        slug: 'standard',
+        label: 'Standard',
+        limits: {
+            maxBooks: 10,
+            maxSessionsPerMonth: 100,
+            maxDurationPerSession: 15, // minutes
+            hasHistory: true,
+        },
+    },
+    pro: {
+        slug: 'pro',
+        label: 'Pro',
+        limits: {
+            maxBooks: 100,
+            maxSessionsPerMonth: Infinity,
+            maxDurationPerSession: 60, // minutes
+            hasHistory: true,
+        },
+    },
+} as const;
+
+export type PlanSlug = keyof typeof SUBSCRIPTION_PLANS;
+

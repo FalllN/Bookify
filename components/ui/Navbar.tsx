@@ -9,12 +9,17 @@ import { SignInButton, SignUpButton, Show, UserButton, useUser } from '@clerk/ne
 const navItems = [
     {label: "Library", href: "/"},
     {label: "Add New", href: "/books/new"},
-    {label: "Pricing", href: "/pricing"}
+    {label: "Pricing", href: "/subscriptions"}
 ]
 
 const Navbar = () => {
     const pathName = usePathname();
     const { user } = useUser();
+    const [isMounted, setIsMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     return (
         <header className="w-full fixed z-50 bg-background">
@@ -50,7 +55,7 @@ const Navbar = () => {
                     <Show when="signed-in">
                         <div className="nav-user-link">
                         <UserButton />
-                            {user?.firstName && (
+                            {isMounted && user?.firstName && (
                                 <Link href="/subscriptions" className="nav-user-name">{user.firstName}</Link>
                             )}
 

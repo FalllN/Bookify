@@ -1,14 +1,17 @@
 import React from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import BookCard from "@/components/ui/BookCard";
 import {getAllBooks} from "@/lib/Actions/book.actions";
+import Search from "@/components/Search";
 
 export const dynamic = 'force-dynamic'
 
-const Page = async () => {
-    const bookResults = await getAllBooks();
+const Page = async ({ searchParams }: { searchParams: Promise<{ query?: string }> }) => {
+    const { query } = await searchParams;
+    const bookResults = await getAllBooks(query);
     const books = bookResults.success ? bookResults.data ?? [] : [];
 
 
@@ -23,12 +26,14 @@ const Page = async () => {
                             <p className="library-hero-description">
                                 Convert your books into interactive AI conversations. Listen, learn, and discuss your favorite reads.
                             </p>
-                            <Button className="bg-[#e4e8ed] text-black hover:bg-[#d4d8dd] rounded-lg h-12 px-6 flex items-center gap-2 border-none shadow-none cursor-pointer">
-                                <Plus className="size-5" />
-                                <span className="font-semibold text-base">Add new book</span>
-                            </Button>
+                            <Link href="/books/new">
+                                <Button className="bg-[#e4e8ed] text-black hover:bg-[#d4d8dd] rounded-lg h-12 px-6 flex items-center gap-2 border-none shadow-none cursor-pointer">
+                                    <Plus className="size-5" />
+                                    <span className="font-semibold text-base">Add new book</span>
+                                </Button>
+                            </Link>
                         </div>
-
+                        
                         {/* Center Section - Illustration */}
                         {/* Mobile Illustration */}
                         <div className="library-hero-illustration">
@@ -80,6 +85,12 @@ const Page = async () => {
                         </div>
                     </div>
                 </div>
+
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-7">
+                    <h2 className="library-hero-title">Recent Books</h2>
+                    <Search />
+                </div>
+
                 <div className="library-books-grid">
                     {books.map((book) => (
                         <BookCard key={book._id} title={book.title} author={book.author} coverURL={book.coverURL} slug={book.slug} />
